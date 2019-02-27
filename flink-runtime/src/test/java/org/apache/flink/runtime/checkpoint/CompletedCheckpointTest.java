@@ -204,7 +204,7 @@ public class CompletedCheckpointTest {
 		TestCompletedCheckpointStorageLocation location =
 				new TestCompletedCheckpointStorageLocation(metadata, "ptr");
 
-		CheckpointProperties props = new CheckpointProperties(false, CheckpointType.CHECKPOINT, true, false, false, false, false);
+		CheckpointProperties props = new CheckpointProperties(false, CheckpointType.CHECKPOINT, true, false, false, false, false,false);
 
 		CompletedCheckpoint checkpoint = new CompletedCheckpoint(
 				new JobID(), 0, 0, 1,
@@ -245,7 +245,7 @@ public class CompletedCheckpointTest {
 					new TestCompletedCheckpointStorageLocation(retainedHandle, "ptr");
 
 			// Keep
-			CheckpointProperties retainProps = new CheckpointProperties(false, CheckpointType.CHECKPOINT, false, false, false, false, false);
+			CheckpointProperties retainProps = new CheckpointProperties(false, CheckpointType.CHECKPOINT, false, false, false, false, false,false);
 			CompletedCheckpoint checkpoint = new CompletedCheckpoint(
 					new JobID(), 0, 0, 1,
 					new HashMap<>(operatorStates),
@@ -265,7 +265,7 @@ public class CompletedCheckpointTest {
 					new TestCompletedCheckpointStorageLocation(discardHandle, "ptr");
 
 			// Keep
-			CheckpointProperties discardProps = new CheckpointProperties(false, CheckpointType.CHECKPOINT, true, true, true, true, true);
+			CheckpointProperties discardProps = new CheckpointProperties(false, CheckpointType.CHECKPOINT, true, true, true, true, true,false);
 
 			checkpoint = new CompletedCheckpoint(
 					new JobID(), 0, 0, 1,

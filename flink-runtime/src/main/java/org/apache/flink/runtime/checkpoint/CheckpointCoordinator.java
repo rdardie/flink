@@ -382,6 +382,39 @@ public class CheckpointCoordinator {
 	}
 
 	/**
+	 * Triggers a savepoint with the given savepoint directory as a target.
+	 *
+	 * @param timestamp The timestamp for the savepoint.
+	 * @param targetLocation Target location for the savepoint, optional. If null, the
+	 *                       state backend's configured default will be used.
+	 * @return A future to the completed checkpoint
+	 * @throws IllegalStateException If no savepoint directory has been
+	 *                               specified and no default savepoint directory has been
+	 *                               configured
+	 */
+	public CompletableFuture<CompletedCheckpoint> triggerStopSourceSavepoint(
+			long timestamp,
+			@Nullable String targetLocation) {
+
+		CheckpointProperties props = CheckpointProperties.forStopSourceBeforeSavepoint();
+
+		CheckpointTriggerResult triggerResult = triggerCheckpoint(
+			timestamp,
+			props,
+			targetLocation,
+			false);
+
+		if (triggerResult.isSuccess()) {
+			return triggerResult.getPendingCheckpoint().getCompletionFuture();
+		} else {
+			Throwable cause = new CheckpointTriggerException("Failed to trigger savepoint.", triggerResult.getFailureReason());
+			return FutureUtils.completedExceptionally(cause);
+		}
+	}
+
+
+
+	/**
 	 * Triggers a new standard checkpoint and uses the given timestamp as the checkpoint
 	 * timestamp.
 	 *
@@ -597,7 +630,7 @@ public class CheckpointCoordinator {
 						}
 					}
 
-					LOG.info("Triggering checkpoint {} @ {} for job {}.", checkpointID, timestamp, job);
+					LOG.info("Triggering checkpoint {} @ {} for job {}. {}", checkpointID, timestamp, job,(props.isStopSourceBeforeSavepoint() ? "#withStopSourceBeforeSavepoint" : ""));
 
 					pendingCheckpoints.put(checkpointID, checkpoint);
 
@@ -621,7 +654,9 @@ public class CheckpointCoordinator {
 
 				final CheckpointOptions checkpointOptions = new CheckpointOptions(
 						props.getCheckpointType(),
-						checkpointStorageLocation.getLocationReference());
+						checkpointStorageLocation.getLocationReference(),
+						props.isStopSourceBeforeSavepoint()
+				);
 
 				// send the messages to the tasks that trigger their checkpoint
 				for (Execution execution: executions) {

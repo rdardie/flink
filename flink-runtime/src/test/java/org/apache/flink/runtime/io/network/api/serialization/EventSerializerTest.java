@@ -57,7 +57,7 @@ public class EventSerializerTest {
 		final byte[] reference = new byte[] { 15, 52, 52, 11, 0, 0, 0, 0, -1, -23, -19, 35 };
 
 		CheckpointOptions savepoint = new CheckpointOptions(
-				CheckpointType.SAVEPOINT, new CheckpointStorageLocationReference(reference));
+				CheckpointType.SAVEPOINT, new CheckpointStorageLocationReference(reference), false);
 		testCheckpointBarrierSerialization(id, timestamp, savepoint);
 	}
 
@@ -163,7 +163,7 @@ public class EventSerializerTest {
 	 * @param event the event to encode
 	 * @param eventClass the event class to check against
 	 *
-	 * @return whether {@link EventSerializer#isEvent(ByteBuffer, Class)}
+	 * @return whether
 	 * 		thinks the encoded buffer matches the class
 	 */
 	private boolean checkIsEvent(

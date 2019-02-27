@@ -42,12 +42,17 @@ public class CheckpointOptions implements Serializable {
 	/** Target location for the checkpoint. */
 	private final CheckpointStorageLocationReference targetLocation;
 
+	/** Indicate if the source must be stop before triggering the checkpoint (must be a savepoint) **/
+	private final boolean stopSourceBeforeSavepoint;
+
 	public CheckpointOptions(
 			CheckpointType checkpointType,
-			CheckpointStorageLocationReference targetLocation) {
+			CheckpointStorageLocationReference targetLocation,
+			boolean stopSourceBeforeSavepoint) {
 
 		this.checkpointType = checkNotNull(checkpointType);
 		this.targetLocation = checkNotNull(targetLocation);
+		this.stopSourceBeforeSavepoint = stopSourceBeforeSavepoint;
 	}
 
 	// ------------------------------------------------------------------------
@@ -88,6 +93,15 @@ public class CheckpointOptions implements Serializable {
 		}
 	}
 
+	/**
+	 * Returns whether the source must be stopped before starting a savepoint.
+	 *
+	 * @return <code>true</code> if the source must be stopped before a savepoint, <code>false</code> otherwise.
+	 */
+	public boolean isStopSourceBeforeSavepoint() {
+		return stopSourceBeforeSavepoint;
+	}
+
 	@Override
 	public String toString() {
 		return "CheckpointOptions: " + checkpointType + " @ " + targetLocation;
@@ -98,9 +112,15 @@ public class CheckpointOptions implements Serializable {
 	// ------------------------------------------------------------------------
 
 	private static final CheckpointOptions CHECKPOINT_AT_DEFAULT_LOCATION =
-			new CheckpointOptions(CheckpointType.CHECKPOINT, CheckpointStorageLocationReference.getDefault());
+			new CheckpointOptions(CheckpointType.CHECKPOINT, CheckpointStorageLocationReference.getDefault(),false);
 
 	public static CheckpointOptions forCheckpointWithDefaultLocation() {
 		return CHECKPOINT_AT_DEFAULT_LOCATION;
 	}
+
+	public static CheckpointOptions forStopSourceSavepoint(CheckpointStorageLocationReference targetDirectory) {
+		checkNotNull(targetDirectory, "targetDirectory");
+		return new CheckpointOptions(CheckpointType.SAVEPOINT, targetDirectory, true);
+	}
 }
+

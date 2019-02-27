@@ -19,6 +19,7 @@ package org.apache.flink.streaming.connectors.kafka;
 
 import org.apache.flink.annotation.Internal;
 import org.apache.flink.annotation.VisibleForTesting;
+import org.apache.flink.api.common.functions.StoppableFetchingSourceFunction;
 import org.apache.flink.api.common.state.ListState;
 import org.apache.flink.api.common.state.ListStateDescriptor;
 import org.apache.flink.api.common.state.OperatorStateStore;
@@ -85,7 +86,8 @@ import static org.apache.flink.util.Preconditions.checkNotNull;
 public abstract class FlinkKafkaConsumerBase<T> extends RichParallelSourceFunction<T> implements
 		CheckpointListener,
 		ResultTypeQueryable<T>,
-		CheckpointedFunction {
+		CheckpointedFunction,
+		StoppableFetchingSourceFunction {
 
 	private static final long serialVersionUID = -6272159445203409112L;
 
@@ -834,6 +836,15 @@ public abstract class FlinkKafkaConsumerBase<T> extends RichParallelSourceFuncti
 			LOG.info("Setting restore state in the FlinkKafkaConsumer: {}", restoredState);
 		} else {
 			LOG.info("No restore state for FlinkKafkaConsumer.");
+		}
+	}
+
+	@Override
+	public void stopFetching() throws Exception {
+		if (kafkaFetcher != null) {
+			LOG.info("stopFetching()");
+			kafkaFetcher.stopFetchLoopBeforeSavepoint();
+			LOG.info("finish stopFetching()");
 		}
 	}
 

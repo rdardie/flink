@@ -50,6 +50,8 @@ public class CheckpointProperties implements Serializable {
 	private final boolean discardFailed;
 	private final boolean discardSuspended;
 
+	private final boolean stopSourceBeforeSavepoint;
+
 	@VisibleForTesting
 	CheckpointProperties(
 			boolean forced,
@@ -58,7 +60,8 @@ public class CheckpointProperties implements Serializable {
 			boolean discardFinished,
 			boolean discardCancelled,
 			boolean discardFailed,
-			boolean discardSuspended) {
+			boolean discardSuspended,
+			boolean stopSourceBeforeSavepoint) {
 
 		this.forced = forced;
 		this.checkpointType = checkNotNull(checkpointType);
@@ -67,6 +70,7 @@ public class CheckpointProperties implements Serializable {
 		this.discardCancelled = discardCancelled;
 		this.discardFailed = discardFailed;
 		this.discardSuspended = discardSuspended;
+		this.stopSourceBeforeSavepoint = stopSourceBeforeSavepoint;
 	}
 
 	// ------------------------------------------------------------------------
@@ -179,6 +183,19 @@ public class CheckpointProperties implements Serializable {
 		return checkpointType == CheckpointType.SAVEPOINT;
 	}
 
+//
+//	public boolean isSavepoint() {
+//		return checkpointType == CheckpointType.SAVEPOINT || checkpointType == CheckpointType.STOP_SOURCE_SAVEPOINT;
+//	}
+
+	/**
+	 * Returns whether the source must be stopped before savepoint.
+	 *
+	 * @return <code>true</code> if the source must be stopped before a savepoint, <code>false</code> otherwise.
+	 */
+	public boolean isStopSourceBeforeSavepoint() {
+		return stopSourceBeforeSavepoint;
+	}
 	// ------------------------------------------------------------------------
 
 	@Override
@@ -198,7 +215,8 @@ public class CheckpointProperties implements Serializable {
 				discardFinished == that.discardFinished &&
 				discardCancelled == that.discardCancelled &&
 				discardFailed == that.discardFailed &&
-				discardSuspended == that.discardSuspended;
+				discardSuspended == that.discardSuspended &&
+		stopSourceBeforeSavepoint == that.stopSourceBeforeSavepoint;
 	}
 
 	@Override
@@ -210,6 +228,7 @@ public class CheckpointProperties implements Serializable {
 		result = 31 * result + (discardCancelled ? 1 : 0);
 		result = 31 * result + (discardFailed ? 1 : 0);
 		result = 31 * result + (discardSuspended ? 1 : 0);
+		result = 31 * result + (stopSourceBeforeSavepoint ? 1 : 0);
 		return result;
 	}
 
@@ -223,7 +242,8 @@ public class CheckpointProperties implements Serializable {
 				", discardCancelled=" + discardCancelled +
 				", discardFailed=" + discardFailed +
 				", discardSuspended=" + discardSuspended +
-				'}';
+			", stopSourceBeforeSavepoint=" + stopSourceBeforeSavepoint +
+			'}';
 	}
 
 	// ------------------------------------------------------------------------
@@ -237,7 +257,18 @@ public class CheckpointProperties implements Serializable {
 			false,
 			false,
 			false,
-			false);
+			false,
+	false);
+
+	private static final CheckpointProperties STOP_SOURCE_SAVEPOINT = new CheckpointProperties(
+		true,
+		CheckpointType.SAVEPOINT,
+		false,
+		false,
+		false,
+		false,
+		false,
+		true);
 
 	private static final CheckpointProperties CHECKPOINT_NEVER_RETAINED = new CheckpointProperties(
 			false,
@@ -246,7 +277,8 @@ public class CheckpointProperties implements Serializable {
 			true,  // Delete on success
 			true,  // Delete on cancellation
 			true,  // Delete on failure
-			true); // Delete on suspension
+			true,
+		false); // Delete on suspension
 
 	private static final CheckpointProperties CHECKPOINT_RETAINED_ON_FAILURE = new CheckpointProperties(
 			false,
@@ -255,7 +287,8 @@ public class CheckpointProperties implements Serializable {
 			true,  // Delete on success
 			true,  // Delete on cancellation
 			false, // Retain on failure
-			true); // Delete on suspension
+			true, // Delete on suspension
+		false);
 
 	private static final CheckpointProperties CHECKPOINT_RETAINED_ON_CANCELLATION = new CheckpointProperties(
 			false,
@@ -264,7 +297,8 @@ public class CheckpointProperties implements Serializable {
 			true,   // Delete on success
 			false,  // Retain on cancellation
 			false,  // Retain on failure
-			false); // Retain on suspension
+			false, // Retain on suspension
+		false);
 
 
 	/**
@@ -277,6 +311,19 @@ public class CheckpointProperties implements Serializable {
 	 */
 	public static CheckpointProperties forSavepoint() {
 		return SAVEPOINT;
+	}
+
+	/**
+	 * Creates the checkpoint properties for a (manually triggered) savepoint
+	 * with indication to stop source before.
+	 *
+	 * <p>Savepoints are forced and persisted externally. They have to be
+	 * garbage collected manually.
+	 *
+	 * @return Checkpoint properties for a (manually triggered) savepoint.
+	 */
+	public static CheckpointProperties forStopSourceBeforeSavepoint() {
+		return STOP_SOURCE_SAVEPOINT;
 	}
 
 	/**

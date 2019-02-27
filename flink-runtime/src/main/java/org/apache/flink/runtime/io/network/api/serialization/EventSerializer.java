@@ -260,7 +260,7 @@ public class EventSerializer {
 			locationRef = new CheckpointStorageLocationReference(bytes);
 		}
 
-		return new CheckpointBarrier(id, timestamp, new CheckpointOptions(checkpointType, locationRef));
+		return new CheckpointBarrier(id, timestamp, new CheckpointOptions(checkpointType, locationRef, false));
 	}
 
 	// ------------------------------------------------------------------------

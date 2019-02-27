@@ -53,7 +53,8 @@ public class CheckpointOptionsTest {
 
 		final CheckpointOptions options = new CheckpointOptions(
 				CheckpointType.values()[rnd.nextInt(CheckpointType.values().length)],
-				new CheckpointStorageLocationReference(locationBytes));
+				new CheckpointStorageLocationReference(locationBytes),
+			false);
 
 		final CheckpointOptions copy = CommonTestUtils.createCopySerializable(options);
 		assertEquals(options.getCheckpointType(), copy.getCheckpointType());
